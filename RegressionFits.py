@@ -8,6 +8,7 @@ Created on Fri Mar 22 16:40:25 2019
 # -*- coding: utf-8 -*-
 
 import pylab
+from math import sqrt
 
 # set line width
 pylab.rcParams['lines.linewidth'] = 4
@@ -28,7 +29,7 @@ pylab.rcParams['ytick.major.size'] = 7
 pylab.rcParams['legend.numpoints'] = 1
 
 
-def getData(fileName):
+def getData(fileName, reduced=False):
     dataFile = open(fileName, 'r')
     distances = []
     masses = []
@@ -38,6 +39,10 @@ def getData(fileName):
         distances.append(float(d))
         masses.append(float(m))
     dataFile.close()
+    if reduced:
+        amt_remove = 6
+        masses = masses[: len(masses) - 6]
+        distances = distances[: len(distances) - 6]
     return (masses, distances)
 
 
@@ -46,41 +51,21 @@ print('masses: ', masses)
 print('distances: ', distances)
 
 
-def plotData(inputFile):
-    masses, distances = getData(inputFile)
+def plotData(inputFile, reduced=False):
+    masses, distances = getData(inputFile, reduced)
     distances = pylab.array(distances)
     masses = pylab.array(masses)
     forces = masses * 9.81
     pylab.plot(forces, distances, 'bo',
                label='Measured displacements')
-    pylab.title('Measured Displacement of Spring')
+    title = 'Measured Displacement of Spring'
+    if reduced:
+        title += ' Reduced'
+    pylab.title(title)
     pylab.xlabel('|Force| (Newtons)')
     pylab.ylabel('Distance (meters)')
-
-
-plotData('springData.txt')
-
-
-def fitData(inputFile):
-    masses, distances = getData(inputFile)
-    distances = pylab.array(distances)
-    forces = pylab.array(masses) * 9.81
-    pylab.plot(forces, distances, 'ko',
-               label='Measured displacements')
-    pylab.title('Measured Displacement of Spring')
-    pylab.xlabel('|Force| (Newtons)')
-    pylab.ylabel('Distance (meters)')
-    a, b = pylab.polyfit(forces, distances, 1)
-    predictedDistances = a * pylab.array(forces) + b
-    k = 1.0 / a
-    pylab.plot(forces, predictedDistances,
-               label='Displacements predicted by\nlinear fit, k = '
-                     + str(round(k, 5)))
-    pylab.legend(loc='best')
-    print('R-squared: ', rSquared(distances, predictedDistances))
-
-
-fitData('springData.txt')
+    pylab.savefig(f'{title.replace(" ", "")}_noline.pdf')
+    # pylab.show()
 
 
 def rSquared(measured, predicted):
@@ -91,3 +76,37 @@ def rSquared(measured, predicted):
     meanOfMeasured = measured.sum() / len(measured)
     variability = ((measured - meanOfMeasured) ** 2).sum()
     return 1 - estimateError / variability
+
+
+def fitData(inputFile, reduced=False):
+    masses, distances = getData(inputFile, reduced)
+    distances = pylab.array(distances)
+    forces = pylab.array(masses) * 9.81
+    pylab.plot(forces, distances, 'ko',
+               label='Measured displacements')
+    title = 'Measured Displacement of Spring'
+    if reduced:
+        title += ' Reduced'
+    pylab.title(title)
+    pylab.xlabel('|Force| (Newtons)')
+    pylab.ylabel('Distance (meters)')
+    a, b = pylab.polyfit(forces, distances, 1)
+    predictedDistances = a * pylab.array(forces) + b
+    k = 1.0 / a
+    pylab.plot(forces, predictedDistances,
+               label='Displacements predicted by\n'
+                     'linear fit, k = ' + str(round(k, 5)))
+    pylab.legend(loc='best')
+    pylab.text(1, .35, f'Line: y={round(a, 3)}x+{round(b, 3)}')
+    # pylab.text(1, .3, f'r: y={round(a, 3)}x+{round(b, 3)}')
+    pylab.savefig(f'{title.replace(" ", "")}.pdf')
+    pylab.show()
+    r_squared = rSquared(distances, predictedDistances)
+    r = sqrt(r_squared)
+    print('R: ', r)
+    print('R-squared: ', rSquared(distances, predictedDistances))
+
+
+if __name__ == '__main__':
+    fitData('springData.txt', True)
+    plotData('springData.txt', True)
