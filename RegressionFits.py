@@ -78,35 +78,36 @@ def rSquared(measured, predicted):
     return 1 - estimateError / variability
 
 
-def fitData(inputFile, reduced=False):
-    masses, distances = getData(inputFile, reduced)
-    distances = pylab.array(distances)
-    forces = pylab.array(masses) * 9.81
-    pylab.plot(forces, distances, 'ko',
+def fitData(x, y, reduced=False):
+    y = pylab.array(y)
+    forces = pylab.array(x) * 9.81
+    pylab.plot(forces, y, 'ko',
                label='Measured displacements')
-    title = 'Measured Displacement of Spring'
+    title = 'Foot Length vs Height'
     if reduced:
         title += ' Reduced'
     pylab.title(title)
-    pylab.xlabel('|Force| (Newtons)')
-    pylab.ylabel('Distance (meters)')
-    a, b = pylab.polyfit(forces, distances, 1)
+    pylab.xlabel('Foot Length (inches)')
+    pylab.ylabel('Height (inches)')
+    a, b = pylab.polyfit(forces, y, 1)
     predictedDistances = a * pylab.array(forces) + b
     k = 1.0 / a
     pylab.plot(forces, predictedDistances,
                label='Displacements predicted by\n'
                      'linear fit, k = ' + str(round(k, 5)))
     pylab.legend(loc='best')
-    pylab.text(1, .35, f'Line: y={round(a, 3)}x+{round(b, 3)}')
-    # pylab.text(1, .3, f'r: y={round(a, 3)}x+{round(b, 3)}')
+    # pylab.text(1, .35, f'Line: y={round(a, 3)}x+{round(b, 3)}')
     pylab.savefig(f'{title.replace(" ", "")}.pdf')
     pylab.show()
-    r_squared = rSquared(distances, predictedDistances)
+    r_squared = rSquared(y, predictedDistances)
     r = sqrt(r_squared)
     print('R: ', r)
-    print('R-squared: ', rSquared(distances, predictedDistances))
+    print('R-squared: ', rSquared(y, predictedDistances))
 
 
 if __name__ == '__main__':
-    fitData('springData.txt', True)
-    plotData('springData.txt', True)
+    # fitData('springData.txt', True)
+    foot_length = [8.5, 10, 11, 8, 9.5]
+    height = [64, 67, 71, 61, 67]
+    fitData(foot_length, height)
+    # plotData('springData.txt', True)
